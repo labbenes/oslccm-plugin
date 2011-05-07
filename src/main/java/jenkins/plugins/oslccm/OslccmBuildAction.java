@@ -25,9 +25,18 @@ package jenkins.plugins.oslccm;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import jenkins.plugins.oslccm.CMConsumer.DescriptorImpl;
+
 import hudson.model.Action;
 import hudson.model.AbstractBuild;
 
+import oauth.signpost.OAuthConsumer;
+import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
+import oauth.signpost.exception.OAuthCommunicationException;
+import oauth.signpost.exception.OAuthExpectationFailedException;
+import oauth.signpost.exception.OAuthMessageSignerException;
+
+import org.apache.http.client.methods.HttpPost;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -38,13 +47,18 @@ public class OslccmBuildAction implements Action {
 	private String url;
 	private String width;
 	private String height;
-	//private String name;
+	private OAuthConsumer consumer;
+	private String buildUrl;
+	private Integer buildNumber; 
 	
-	public OslccmBuildAction(AbstractBuild<?, ?> build, String delegUrl, int width, int height) {
+	public OslccmBuildAction(AbstractBuild<?, ?> build, String delegUrl, int width, int height, OAuthConsumer consumer, String absoluteBuildURL) {
 		this.build = build;
 		url = delegUrl;
 		this.width = width + "";
 		this.height = height + "";
+		this.consumer = consumer;
+		this.buildUrl = absoluteBuildURL;
+		//this.buildNumber = build.number;
 		LOGGER.info("New buid action added with url: " + url + ", width:" + width + ", height:" + height);
 		
 	}
@@ -54,7 +68,28 @@ public class OslccmBuildAction implements Action {
 	}
 	
 	public String getUrl()	{
-		return url;
+		String uiUrl = url;
+
+        try {
+	        HttpPost post = new HttpPost("http://fftrunk/plugins/oslc/cm/project/6/tracker/101");
+	        consumer.sign(post);
+	        String hdr = post.getFirstHeader("Authorization").getValue().substring(6).replace(", ", "&");
+	        uiUrl = uiUrl + "?" + hdr + "&build_url=" + this.buildUrl + "&build_number=" + this.getBuild().number;
+        	
+			//uiUrl = consumer.sign(this.getDelegUrl());
+			uiUrl = uiUrl.replace("oauth", "auth");
+			LOGGER.info("NEW URL: " + uiUrl);
+		} catch (OAuthMessageSignerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OAuthExpectationFailedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OAuthCommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return uiUrl;
 	}
 	
 	public String getWidth()	{
