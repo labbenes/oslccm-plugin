@@ -49,7 +49,6 @@ public class OslccmBuildAction implements Action {
 	private String height;
 	private OAuthConsumer consumer;
 	private String buildUrl;
-	private Integer buildNumber; 
 	
 	public OslccmBuildAction(AbstractBuild<?, ?> build, String delegUrl, int width, int height, OAuthConsumer consumer, String absoluteBuildURL) {
 		this.build = build;
@@ -58,7 +57,6 @@ public class OslccmBuildAction implements Action {
 		this.height = height + "";
 		this.consumer = consumer;
 		this.buildUrl = absoluteBuildURL;
-		//this.buildNumber = build.number;
 		LOGGER.info("New buid action added with url: " + url + ", width:" + width + ", height:" + height);
 		
 	}
@@ -69,16 +67,14 @@ public class OslccmBuildAction implements Action {
 	
 	public String getUrl()	{
 		String uiUrl = url;
+		String factoryUrl = url;
 
         try {
-	        HttpPost post = new HttpPost("http://fftrunk/plugins/oslc/cm/project/6/tracker/101");
+        	factoryUrl  = uiUrl.substring(0, uiUrl.length() - 12);
+	        HttpPost post = new HttpPost(factoryUrl);
 	        consumer.sign(post);
 	        String hdr = post.getFirstHeader("Authorization").getValue().substring(6).replace(", ", "&");
 	        uiUrl = uiUrl + "?" + hdr + "&build_url=" + this.buildUrl + "&build_number=" + this.getBuild().number;
-        	
-			//uiUrl = consumer.sign(this.getDelegUrl());
-			uiUrl = uiUrl.replace("oauth", "auth");
-			LOGGER.info("NEW URL: " + uiUrl);
 		} catch (OAuthMessageSignerException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
