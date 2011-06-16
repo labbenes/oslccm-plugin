@@ -67,14 +67,15 @@ public class OslccmBuildAction implements Action {
 	
 	public String getUrl()	{
 		String uiUrl = url;
-		String factoryUrl = url;
+		//String factoryUrl = url;
 
         try {
-        	factoryUrl  = uiUrl.substring(0, uiUrl.length() - 12);
-	        HttpPost post = new HttpPost(factoryUrl);
-	        consumer.sign(post);
-	        String hdr = post.getFirstHeader("Authorization").getValue().substring(6).replace(", ", "&");
-	        uiUrl = uiUrl + "?" + hdr + "&build_url=" + this.buildUrl + "&build_number=" + this.getBuild().number;
+        	//factoryUrl  = uiUrl.substring(0, uiUrl.length() - 12);
+	        //HttpPost post = new HttpPost(uiUrl);
+        	uiUrl = uiUrl + "?build_url=" + this.buildUrl + "&build_number=" + this.getBuild().number;
+        	uiUrl = consumer.sign(uiUrl);
+	        //String hdr = post.getFirstHeader("Authorization").getValue().substring(6).replace(", ", "&");
+	        //uiUrl = uiUrl + "?" + hdr.replace("\"", "")+ "&build_url=" + this.buildUrl + "&build_number=" + this.getBuild().number;
 		} catch (OAuthMessageSignerException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
